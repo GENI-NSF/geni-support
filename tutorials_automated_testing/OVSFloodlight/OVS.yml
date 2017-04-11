@@ -1,3 +1,4 @@
+
 #
 # Copyright (c) 2017 Raytheon BBN Technologies
 # 
@@ -19,7 +20,7 @@
 #
 ---
 - name: Controller
-  hosts: controller
+  hosts: Controller
   tasks:
   - name: change directory
     raw: cd /local/floodlight/
@@ -36,7 +37,7 @@
   - debug: var=fld.stdout_lines
 
 - name: switch
-  hosts: switch
+  hosts: Switch
   become: true
   become_method: sudo
   tasks:
@@ -68,18 +69,18 @@
     command: ovs-vsctl set-fail-mode br0 secure
 
 - name: host2
-  hosts: host2
+  hosts: Host2
   tasks: [ ]
 
 - name: host3
-  hosts: host3
+  hosts: Host3
   tasks: [ ]
 
 
 
 
 - name: host1
-  hosts: host1
+  hosts: Host1
   tasks:
    - name: ping host2
      command: ping {{ hostvars['Host2']['ansible_eth1']['ipv4'] ['address'] }} -c 10
