@@ -1,0 +1,96 @@
+#
+# Copyright (c) 2017 Raytheon BBN Technologies
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+# software and/or hardware specification (the “Work”) to deal in the Work without 
+# restriction, including without limitation the rights to use, copy, modify, merge, 
+# publish, distribute, sublicense, and/or sell copies of the Work, and to permit 
+# persons to whom the Work is furnished to do so, subject to the following conditions:  
+# 
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Work.  
+# 
+# THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE WORK 
+# OR THE USE OR OTHER DEALINGS IN THE WORK. 
+#
+---
+- name: Controller
+  hosts: controller
+  tasks:
+  - name: change directory
+    raw: cd /local/floodlight/
+    register: f
+  - debug: var=f.stdout_lines
+
+  - name: Start Floodlight Controller
+    command: java -jar target/floodlight.jar
+    args:
+      chdir: /local/floodlight/ 
+    async: 3600
+    poll: 0
+    register: fld
+  - debug: var=fld.stdout_lines
+
+- name: switch
+  hosts: switch
+  become: true
+  become_method: sudo
+  tasks:
+  - name: add ovs-br
+    command: ovs-vsctl add-br br0
+
+  - name: disable ip address of eth1
+    command: ifconfig eth1 0
+
+  - name: disable ip address of eth2
+    command: ifconfig eth2 0
+
+  - name: disable ip address of eth3
+    command: ifconfig eth3 0
+
+  - name: add eth1 to br
+    command: ovs-vsctl add-port br0 eth1
+
+  - name: add eth2 to br
+    command: ovs-vsctl add-port br0 eth2
+
+  - name: add eth3 to br
+    command: ovs-vsctl add-port br0 eth3
+
+  - name: set controller
+    command: ovs-vsctl set-controller br0 tcp:{{ hostvars['Controller']['ansible_eth0']['ipv4']['address'] }}:6633
+
+  - name: set fail-mode
+    command: ovs-vsctl set-fail-mode br0 secure
+
+- name: host2
+  hosts: host2
+  tasks: [ ]
+
+- name: host3
+  hosts: host3
+  tasks: [ ]
+
+
+
+
+- name: host1
+  hosts: host1
+  tasks:
+   - name: ping host2
+     command: ping {{ hostvars['Host2']['ansible_eth1']['ipv4'] ['address'] }} -c 10
+     register: host1
+     failed_when: "'Destination Host Unreachable' in host1.stdout"
+   - debug: var=host1.stdout_lines
+
+   - name: ping host3
+     command: ping {{ hostvars['Host3']['ansible_eth1']['ipv4'] ['address'] }} -c 10
+     register: host1
+     failed_when: "'Destination Host Unreachable' in host1.stdout"
+   - debug: var=host1.stdout_lines
+
+
