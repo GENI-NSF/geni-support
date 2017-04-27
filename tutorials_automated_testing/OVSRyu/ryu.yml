@@ -1,0 +1,83 @@
+---
+- name: host2
+  hosts: host2
+  tasks: [ ]
+
+- name: host3
+  hosts: host3
+  tasks: [ ]
+
+
+- name: host1
+  hosts: host1
+  tasks:
+   - name: ping host2
+     command: ping host2 -c 10
+     register: host1
+     ignore_errors: yes
+     failed_when: "'Destination Host Unreachable' in host1.stdout"
+   - debug: var=host1.stdout_lines
+
+
+- name: Controller
+  hosts: controller
+  tasks:
+  - name: Start RYU Controller
+    command: ./bin/ryu-manager ryu/app/simple_switch.py
+    args:
+      chdir: /tmp/ryu/ 
+    async: 3600
+    poll: 0
+    register: ryu
+  - debug: var=ryu.stdout_lines
+
+- name: switch
+  hosts: OVS
+  become: true
+  become_method: sudo
+  tasks:
+  - name: add ovs-br
+    command: ovs-vsctl add-br br0
+
+  - name: disable ip address of eth1
+    command: ifconfig eth1 0
+
+  - name: disable ip address of eth2
+    command: ifconfig eth2 0
+
+  - name: disable ip address of eth3
+    command: ifconfig eth3 0
+
+  - name: add eth1 to br
+    command: ovs-vsctl add-port br0 eth1
+
+  - name: add eth2 to br
+    command: ovs-vsctl add-port br0 eth2
+
+  - name: add eth3 to br
+    command: ovs-vsctl add-port br0 eth3
+
+  - name: set controller
+    command: ovs-vsctl set-controller br0 tcp:{{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}:6633
+
+  - name: set fail-mode
+    command: ovs-vsctl set-fail-mode br0 secure
+
+
+
+- name: host1
+  hosts: host1
+  tasks:
+   - name: ping host2
+     command: ping host2 -c 10
+     register: host1
+     failed_when: "'Destination Host Unreachable' in host1.stdout"
+   - debug: var=host1.stdout_lines
+
+   - name: ping host3
+     command: ping host3 -c 10
+     register: host1
+     failed_when: "'Destination Host Unreachable' in host1.stdout"
+   - debug: var=host1.stdout_lines
+
+
