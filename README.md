@@ -1,10 +1,9 @@
-The LICENSE directory contains the LICENSE text to be added to XML, Shell and Text files used in tutorials.
+The geni-support repository includes files used for GENI support activities. Directories found in this repository are organized as follows:
 
-The files in this directory should be inserted at the top of files as appropriate for the file type:
+- **Utilities** - Directory contains files used in [HowTo and Procedure](http://groups.geni.net/geni/wiki/HowTo) pages.
+- **tutorials_automated_testing** - Directory contains ansible files for automated tutorial testing conducted by iMinds folks. Automated test results can be seen [here](https://flsmonitor.fed4fire.eu/genitests). 
 
- - LICENSE.sh for shell scripts
- - LICENSE.txt for text files
- - LICENSE.xml for XML file/RSpecs
-
-Note: Please update the year to reflect the date of coverage.
+- **GRAPHICS**: Commonly used graphics to keep a consistent presentation for GENI tutorials.
+- **LICENSE**: Contains XML, Text, YML and Shell version of GENI LICENSE which are to be added to tutorial files.
+- **TEMPLATE**: Commonly used templates to aid in the writing tutorials and keep a consistent level of information
 
