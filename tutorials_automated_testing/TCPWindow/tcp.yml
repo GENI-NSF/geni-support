@@ -1,0 +1,126 @@
+#
+# Copyright (c) 2017 Raytheon BBN Technologies
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+# software and/or hardware specification (the “Work”) to deal in the Work without 
+# restriction, including without limitation the rights to use, copy, modify, merge, 
+# publish, distribute, sublicense, and/or sell copies of the Work, and to permit 
+# persons to whom the Work is furnished to do so, subject to the following conditions:  
+# 
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Work.  
+# 
+# THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE WORK 
+# OR THE USE OR OTHER DEALINGS IN THE WORK. 
+#
+---
+- name: install iperf on client and server
+  hosts: all
+  become: true
+  become_method: sudo
+  tasks:
+   - name: install iperf
+     package:
+        name: iperf
+        state: present
+
+- name: run tasks on server
+  hosts: server
+  tasks:
+    - name: ping client
+      shell: ping {{hostvars['client']['ansible_eth1']['ipv4']['address']}}  -c 10 > output.txt
+      register: server
+      failed_when: "'Destination Host Unreachable' in server.stdout"
+    - debug: var=server.stdout_lines
+
+    - name: get avg rtt
+      shell: awk '/avg/ {print $4}; ' output.txt | awk 'BEGIN {FS="/";} {print$2;}'
+      register: rtt1
+    - debug: var=rtt1.stdout_lines
+  
+    - name: add delay
+      become: true
+      become_method: sudo
+      command: tc qdisc add dev eth1 root netem delay 100ms
+
+    - name: ping client after delay
+      shell: ping {{hostvars['client']['ansible_eth1']['ipv4']['address']}} -c 10 > output2.txt
+      register: server1
+      failed_when: "'Destination Host Unreachable' in server1.stdout"
+    - debug: var=server1.stdout_lines
+
+    - name: get avg rtt after delay
+      shell: awk '/avg/ {print $4}; ' output2.txt | awk 'BEGIN {FS="/";} {print$2;}'
+      register: rtt2
+    - debug: var=rtt2.stdout_lines
+ 
+    - name: get difference of rtt
+      command: echo "{{ rtt2.stdout|float - rtt1.stdout|float}}"
+      register: diff
+      failed_when: "(rtt2.stdout|float - rtt1.stdout|float) < 99"
+    - debug: msg="Difference in RTT is {{ rtt2.stdout|float - rtt1.stdout|float}} ms"
+
+    - name: remove delay
+      become: true
+      become_method: sudo
+      command: tc qdisc del dev eth1 root
+
+    - name: ping client after removing delay
+      command: ping {{hostvars['client']['ansible_eth1']['ipv4']['address']}} -c 10
+      register: server2
+      failed_when: "'Destination Host Unreachable' in server2.stdout"
+   
+    - name: start iperf
+      command: iperf -s
+      async: 300
+      poll: 0
+
+- name: run tasks on client
+  hosts: client
+  tasks:
+    - name: start iperf on client
+      shell: iperf -c {{hostvars['server']['ansible_eth1']['ipv4']['address']}} -t 10 > output_c1.txt
+      register: client
+    - debug: var=client.stdout_lines
+    - name: Checking that the window is set to default
+      shell: awk '/window/ {print $6}; ' output_c1.txt
+      register: xfer1
+      failed_when: "'(default)' not in xfer1.stdout"
+    - debug: var=xfer1.stdout_lines
+
+- name: run tasks on server
+  hosts: server
+  tasks:
+   - name: Kill iperf
+     become: true
+     become_method: sudo
+     command: killall -q iperf
+   - name: change tcp window size on server
+     command: iperf -s -w 2KB
+     async: 300
+     poll: 0
+     
+- name: run tasks on client
+  hosts: client
+  tasks:
+    - name: start iperf on client after changing window size
+      shell: iperf -c {{hostvars['server']['ansible_eth1']['ipv4']['address']}} -t 10 -w 2KB > output_c2.txt
+      register: client1
+    - debug: var=client1.stdout_lines
+    - name: Checking that the window changed
+      shell: awk '/window/ {print $6}; ' output_c2.txt
+      register: xfer2
+      failed_when: "'(default)' in xfer2.stdout"
+    - debug: var=xfer2.stdout_lines
+
+- name: run tasks on server
+  hosts: server
+  tasks:
+   - name: Kill iperf
+     become: true
+     become_method: sudo
+     command: killall -q iperf
