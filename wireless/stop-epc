@@ -1,0 +1,12 @@
+#! /bin/sh
+
+procs=
+procs="$procs hss"
+procs="$procs mme"
+procs="$procs spgw"
+
+for p in $procs; do
+  pids="$(ps -ef | grep "$p" | grep -v grep | awk '{print $2}')"
+
+  for i in $pids; do kill $i 2> /dev/null; done
+done

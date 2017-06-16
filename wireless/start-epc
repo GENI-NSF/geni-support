@@ -1,0 +1,83 @@
+#! /bin/sh
+
+this="${0##*/}"
+
+ts="$(date +%y%m%d_%H%M%S)"
+#OAI_HOME="$HOME/OAI"
+OAI_HOME="$(cd $(dirname $0); /bin/pwd)"
+OAI_CN="$OAI_HOME/openair-cn"
+OAI_ETC="/usr/local/etc/oai"
+OAI_LOG="/var/log/oai"
+
+count () {
+    [ -z $1 ] && return 1
+    [ $1 -ne $1 ] && return 1
+    local i=0
+    while [ $i -lt $1 ]; do
+      echo -n "."
+      sleep 1
+      i=$(( $i + 1 ))
+    done
+    echo
+}
+
+stop_oai() {
+    local procs
+
+    unset procs
+    procs="$procs hss"
+    procs="$procs mme"
+    procs="$procs spgw"
+
+    for p in $procs; do
+	local i
+	local pids="$(ps -ef | grep "$p" | grep -v grep | awk '{print $2}')"
+
+	for i in $pids; do
+	    kill $i 2>&1 > /dev/null
+	done
+    done
+}
+
+START_SPGW="$(which run_spgw)"
+[ -z "$START_SPGW" ] && START_SPGW="$OAI_CN_SCRIPTS/run_spgw"
+
+START_MME="$(which run_mme)"
+[ -z "$START_MME" ] && START_MME="$OAI_CN_SCRIPTS/run_mme"
+
+START_HSS="$(which run_hss)"
+[ -z "$START_HSS" ] && START_HSS="$OAI_CN_SCRIPTS/run_hss"
+
+[ -f "$START_HSS" ] && [ -f "$START_MME" ] && [ -f "$START_SPGW" ] || exit 1
+
+#rm "$OAI_ETC_FD/*.pem"
+#check_mme_s6a_certificate $OAI_ETC/freeDiameter epc.bbn.com
+#check_hss_s6a_certificate $OAI_ETC/freeDiameter hss.bbn.com
+
+LOG_DIR="$OAI_LOG/EPC_LOGS/$ts"
+i=0; while [ -d "$LOG_DIR" ]; do
+  i=$(( $i + 1 ))
+  LOG_DIR="/tmp/$ts-$i"
+done
+
+mkdir -p "$LOG_DIR" > /dev/null 2>&1
+[ -d "$LOG_DIR" ] || exit 1
+
+stop_oai
+
+iptables -t nat --flush
+iptables -t mangle --flush
+
+echo -n "Starting HSS..."
+(xterm -hold -geometry 275x22+85+100 -e "$START_HSS|tee $LOG_DIR/hss.log" &) || exit 1
+count 3
+
+echo -n "Starting MME..."
+(xterm -hold -geometry 275x22+85+450 -e "$START_MME|tee $LOG_DIR/mme.log" &) || exit 1
+count 0
+
+echo -n "Starting S/PGW..."
+(xterm -hold -geometry 275x22+85+800 -e "$START_SPGW|tee $LOG_DIR/spgw.log" &) || exit 1
+count 0
+
+echo "Log directory is $LOG_DIR"
