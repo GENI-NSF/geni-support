@@ -1,0 +1,14 @@
+<rspec xmlns="http://www.geni.net/resources/rspec/3" xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" xmlns:tour="http://www.protogeni.net/resources/rspec/ext/apt-tour/1" xmlns:jacks="http://www.protogeni.net/resources/rspec/ext/jacks/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sharedvlan="http://www.geni.net/resources/rspec/ext/shared-vlan/1" xsi:schemaLocation="http://www.geni.net/resources/rspec/3  http://www.geni.net/resources/rspec/3/request.xsd http://www.geni.net/resources/rspec/ext/shared-vlan/1 http://www.geni.net/resources/rspec/ext/shared-vlan/1/request.xsd " type="request">
+<node client_id="your_site-pc" exclusive="true" >
+    <sliver_type name="raw-pc">
+    </sliver_type>
+    <interface client_id="your_site-pc:if0">
+    <ip address="10.3.2.11" netmask="255.255.0.0" type="ipv4"/>
+    </interface>
+  <services xmlns="http://www.geni.net/resources/rspec/3"/>
+</node>
+<link client_id="link2pc">
+    <interface_ref client_id="your_site-pc:if0"/>
+    <sharedvlan:link_shared_vlan xmlns:sharedvlan="http://www.geni.net/resources/rspec/ext/shared-vlan/1" name="lte-multipoint"/>
+</link>
+</rspec>
