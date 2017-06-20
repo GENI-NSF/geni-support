@@ -10,9 +10,9 @@ require 'mysql'
 #to use, set imsis, realm, mme, hss, and apn as needed to match configuration and sim cards. max_mme and max_ue reference the existing number of entries in the db.
 
 imsis=['001010000000001','001010000000002','001010000000003','001010000000004','001010000000005','001010000000006','001010000000007','001010000000008','001010000000009','001010000000010','001010000000011','001010000000012']
-realm = '.donotdelete.ch-geni-net.instageni.gpolab.bbn.com'
-mme = 'gpo-pc.donotdelete.ch-geni-net.instageni.gpolab.bbn.com'
-hss = 'hss.donotdelete.ch-geni-net.instageni.gpolab.bbn.com'
+realm = 'orbit-lab.org'
+mme = 'mme02.orbit-lab.org'
+hss = 'hss.orbit-lab.org'
 apn = 'orbitA'
 max_mme = 6 #number of existing mme entries in table mmeidentity
 max_ue = 59 #number of existing UEs in table users
