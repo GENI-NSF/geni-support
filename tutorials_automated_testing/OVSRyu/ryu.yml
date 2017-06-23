@@ -18,29 +18,34 @@
 # OR THE USE OR OTHER DEALINGS IN THE WORK. 
 #
 ---
-- name: host2
-  hosts: host2
+- name: S2
+  hosts: S2
   tasks: [ ]
 
-- name: host3
-  hosts: host3
+- name: destination
+  hosts: destination
   tasks: [ ]
 
-
-- name: host1
-  hosts: host1
+- name: S1
+  hosts: S1
   tasks:
-   - name: ping host2
-     command: ping host2 -c 10
-     register: host1
-     ignore_errors: yes
-     failed_when: "'Destination Host Unreachable' in host1.stdout"
-   - debug: var=host1.stdout_lines
+   - name: ping S2
+     command: ping S2 -c 10
+     register: S1
+     failed_when: "' 0% packet loss' in S1.stdout"
+   - debug: var=S1.stdout_lines
+   - pause:
+       seconds: 20
 
 
 - name: Controller
   hosts: controller
   tasks:
+  - name: Checking if RYU installed
+    stat:
+      path: /tmp/ryu/ryu/app/simple_switch.py
+    register: ryu
+    failed_when: not ryu.stat.exists 
   - name: Start RYU Controller
     command: ./bin/ryu-manager ryu/app/simple_switch.py
     args:
@@ -49,6 +54,8 @@
     poll: 0
     register: ryu
   - debug: var=ryu.stdout_lines
+  - pause:
+      seconds: 20
 
 - name: switch
   hosts: OVS
@@ -67,6 +74,12 @@
   - name: disable ip address of eth3
     command: ifconfig eth3 0
 
+  - name: disable ip address of eth4
+    command: ifconfig eth4 0
+
+  - name: disable ip address of eth5
+    command: ifconfig eth5 0
+
   - name: add eth1 to br
     command: ovs-vsctl add-port br0 eth1
 
@@ -76,27 +89,49 @@
   - name: add eth3 to br
     command: ovs-vsctl add-port br0 eth3
 
+  - name: add eth4 to br
+    command: ovs-vsctl add-port br0 eth4
+
+  - name: add eth5 to br
+    command: ovs-vsctl add-port br0 eth5
+
   - name: set controller
     command: ovs-vsctl set-controller br0 tcp:{{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}:6633
 
   - name: set fail-mode
     command: ovs-vsctl set-fail-mode br0 secure
 
-
-
-- name: host1
-  hosts: host1
+- name: S1
+  hosts: S1
   tasks:
-   - name: ping host2
-     command: ping host2 -c 10
-     register: host1
-     failed_when: "'Destination Host Unreachable' in host1.stdout"
-   - debug: var=host1.stdout_lines
+   - name: ping S2
+     command: ping S2 -c 10
+     register: S1
+     failed_when: "'Destination Host Unreachable' in S1.stdout"
+   - debug: var=S1.stdout_lines
 
-   - name: ping host3
-     command: ping host3 -c 10
-     register: host1
-     failed_when: "'Destination Host Unreachable' in host1.stdout"
-   - debug: var=host1.stdout_lines
+   - name: ping destination
+     command: ping destination -c 10
+     register: S1
+     failed_when: "'Destination Host Unreachable' in S1.stdout"
+   - debug: var=S1.stdout_lines
 
+- name: install java on VNF1 and VNF2
+  hosts: VNF1 VNF2
+  become: true
+  become_method: sudo
+  tasks:
+   - name: install java
+     package:
+        name: openjdk-7-jdk
+        update_cache: yes
+        state: present
 
+- name: check for snort install
+  hosts: VNF1 VNF2
+  tasks:
+  - name: checking install
+    command: /usr/local/bin/snort --help
+    register: snort
+    failed_when: "'Snort!' not in snort.stderr"
+  - debug: var=snort.stderr
