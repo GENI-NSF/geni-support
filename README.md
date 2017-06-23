@@ -6,4 +6,4 @@ The geni-support repository includes files used for GENI support activities. Dir
 - **GRAPHICS**: Commonly used graphics to keep a consistent presentation for GENI tutorials.
 - **LICENSE**: Contains XML, Text, YML and Shell version of GENI LICENSE which are to be added to tutorial files.
 - **TEMPLATE**: Commonly used templates to aid in the writing tutorials and keep a consistent level of information
-
+- **wireless**: Database scripts, software startup scripts and Rspecs used in [GENI LTE Deploymnet](http://groups.geni.net/geni/wiki/GENILTE/LTEDeployment).
