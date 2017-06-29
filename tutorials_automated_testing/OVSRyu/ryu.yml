@@ -35,7 +35,7 @@
      failed_when: "' 0% packet loss' in S1.stdout"
    - debug: var=S1.stdout_lines
    - pause:
-       seconds: 20
+       seconds: 300
 
 
 - name: Controller
@@ -55,7 +55,7 @@
     register: ryu
   - debug: var=ryu.stdout_lines
   - pause:
-      seconds: 20
+      seconds: 300
 
 - name: switch
   hosts: OVS
