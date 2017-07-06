@@ -2,6 +2,10 @@
 
 IFTMPFILE=`mktemp`
 SWITCHNAME="br0"
+IFINFO=/tmp/InterfacesInfo
+
+# Save Interface Infromation 
+ifconfig -a >$IFINFO
 
 # Get the list of dataplane interfaces 
 ifconfig -a | grep "Link encap" | grep -v ^lo | grep -v ^br | awk '{print $1, $5}' > $IFTMPFILE
