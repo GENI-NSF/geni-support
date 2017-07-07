@@ -63,7 +63,7 @@
     command: ovs-vsctl add-port br0 eth3
 
   - name: set controller
-    command: ovs-vsctl set-controller br0 tcp:{{ hostvars['Controller']['ansible_eth0']['ipv4']['address'] }}:6633
+    command: ovs-vsctl set-controller br0 tcp:{{ hostvars['Controller']['ansible_eth0']['ipv4']['address'] }}:6653
 
   - name: set fail-mode
     command: ovs-vsctl set-fail-mode br0 secure
