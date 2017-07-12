@@ -2,7 +2,7 @@
 
 IFTMPFILE=`mktemp`
 SWITCHNAME="br0"
-IFINFO=/tmp/InterfacesInfo
+IFINFO=/local/InterfacesInfo
 
 # Save Interface Infromation 
 ifconfig -a >$IFINFO
