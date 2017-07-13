@@ -39,7 +39,7 @@
 
 
 - name: Controller
-  hosts: controller
+  hosts: Controller
   tasks:
   - name: Checking if RYU installed
     stat:
