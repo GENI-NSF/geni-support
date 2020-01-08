@@ -115,21 +115,6 @@
      register: S1
      failed_when: "'Destination Host Unreachable' in S1.stdout"
    - debug: var=S1.stdout_lines
-
-- name: install java on VNF1 and VNF2
-  hosts: VNF1 VNF2
-  become: true
-  become_method: sudo
-  tasks:
-   - name: install java
-     package:
-        name: openjdk-7-jdk
-        update_cache: yes
-        state: present
-
-- name: check for snort install
-  hosts: VNF1 VNF2
-  tasks:
   - name: checking install
     command: /usr/local/bin/snort --help
     register: snort
