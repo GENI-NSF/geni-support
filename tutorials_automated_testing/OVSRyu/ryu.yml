@@ -115,8 +115,4 @@
      register: S1
      failed_when: "'Destination Host Unreachable' in S1.stdout"
    - debug: var=S1.stdout_lines
-  - name: checking install
-    command: /usr/local/bin/snort --help
-    register: snort
-    failed_when: "'Snort!' not in snort.stderr"
-  - debug: var=snort.stderr
+   
