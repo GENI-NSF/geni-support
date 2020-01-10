@@ -19,18 +19,18 @@
 #
 ---
 - name: S2
-  hosts: S2
+  hosts: host2
   tasks: [ ]
 
 - name: destination
-  hosts: destination
+  hosts: host3
   tasks: [ ]
 
 - name: S1
-  hosts: S1
+  hosts: host1
   tasks:
    - name: ping S2
-     command: ping S2 -c 10
+     command: ping host2 -c 10
      register: S1
      failed_when: "' 0% packet loss' in S1.stdout"
    - debug: var=S1.stdout_lines
@@ -102,16 +102,16 @@
     command: ovs-vsctl set-fail-mode br0 secure
 
 - name: S1
-  hosts: S1
+  hosts: host1
   tasks:
-   - name: ping S2
-     command: ping S2 -c 10
+   - name: ping host2
+     command: ping host2 -c 10
      register: S1
      failed_when: "'Destination Host Unreachable' in S1.stdout"
    - debug: var=S1.stdout_lines
 
    - name: ping destination
-     command: ping destination -c 10
+     command: ping host3 -c 10
      register: S1
      failed_when: "'Destination Host Unreachable' in S1.stdout"
    - debug: var=S1.stdout_lines
