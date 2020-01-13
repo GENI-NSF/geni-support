@@ -74,12 +74,6 @@
   - name: disable ip address of eth3
     command: ifconfig eth3 0
 
-  - name: disable ip address of eth4
-    command: ifconfig eth4 0
-
-  - name: disable ip address of eth5
-    command: ifconfig eth5 0
-
   - name: add eth1 to br
     command: ovs-vsctl add-port br0 eth1
 
@@ -89,11 +83,6 @@
   - name: add eth3 to br
     command: ovs-vsctl add-port br0 eth3
 
-  - name: add eth4 to br
-    command: ovs-vsctl add-port br0 eth4
-
-  - name: add eth5 to br
-    command: ovs-vsctl add-port br0 eth5
 
   - name: set controller
     command: ovs-vsctl set-controller br0 tcp:{{ hostvars['Controller']['ansible_eth0']['ipv4']['address'] }}:6633
